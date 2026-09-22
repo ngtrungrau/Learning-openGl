@@ -108,7 +108,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)Dependencies\GLEW\include;$(ProjectDir)Dependencies\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Dependencies\GLEW\include;$(ProjectDir)Dependencies\GLFW\include;$(ProjectDir)res\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,7 +125,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)Dependencies\GLEW\include;$(ProjectDir)Dependencies\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Dependencies\GLEW\include;$(ProjectDir)Dependencies\GLFW\include;$(ProjectDir)res\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,10 +137,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="res\imgui\imgui.cpp" />
+    <ClCompile Include="res\imgui\imgui_demo.cpp" />
+    <ClCompile Include="res\imgui\imgui_draw.cpp" />
+    <ClCompile Include="res\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="res\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="res\imgui\imgui_tables.cpp" />
+    <ClCompile Include="res\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="res\stb_image\stb_image.cpp" />
     <ClCompile Include="src\Maths.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\main.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\Render.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\VAO.cpp" />
@@ -148,6 +159,22 @@
     <ClCompile Include="src\VertexBufferLayout.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dependencies\GLEW\include\GL\eglew.h" />
+    <ClInclude Include="Dependencies\GLEW\include\GL\glew.h" />
+    <ClInclude Include="Dependencies\GLEW\include\GL\glxew.h" />
+    <ClInclude Include="Dependencies\GLEW\include\GL\wglew.h" />
+    <ClInclude Include="Dependencies\GLFW\include\GLFW\glfw3.h" />
+    <ClInclude Include="Dependencies\GLFW\include\GLFW\glfw3native.h" />
+    <ClInclude Include="res\imgui\imconfig.h" />
+    <ClInclude Include="res\imgui\imgui.h" />
+    <ClInclude Include="res\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="res\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="res\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="res\imgui\imgui_internal.h" />
+    <ClInclude Include="res\imgui\imstb_rectpack.h" />
+    <ClInclude Include="res\imgui\imstb_textedit.h" />
+    <ClInclude Include="res\imgui\imstb_truetype.h" />
+    <ClInclude Include="res\stb_image\stb_image.h" />
     <ClInclude Include="src\Maths.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\IndexBuffer.h" />
@@ -156,6 +183,13 @@
     <ClInclude Include="src\VAO.h" />
     <ClInclude Include="src\VertexBuffer.h" />
     <ClInclude Include="src\VertexBufferLayout.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shader\BasicShader.shader" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\image\cat.png" />
+    <Image Include="res\image\dog.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
