@@ -44,6 +44,7 @@ public:
 
 	Vec3();
 	Vec3(float x, float y,float z);
+	Vec3(const float datas[3]);
 
 	
 	Vec3 operator+(const Vec3& other)const;
@@ -79,6 +80,7 @@ public:
 
 	Vec4();
 	Vec4(float x, float y, float z,float w);
+	Vec4(const float datas[4]);
 	Vec4 operator+(const Vec4& other)const;
 	Vec4 operator-(const Vec4& other)const;
 

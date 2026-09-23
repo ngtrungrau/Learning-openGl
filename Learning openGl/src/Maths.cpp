@@ -24,6 +24,13 @@ Vec2& Vec2::Normalize()
 Vec3::Vec3() : m_x(0), m_y(0), m_z(0) {}
 Vec3::Vec3(float x, float y, float z) : m_x(x), m_y(y), m_z(z) {}
 
+Vec3::Vec3(const float datas[3])
+{
+    elements[0] = datas[0];
+    elements[1] = datas[1];
+    elements[2] = datas[2];
+}
+
 Vec3 Vec3::operator+(const Vec3& other) const { return { m_x + other.m_x, m_y + other.m_y, m_z + other.m_z }; }
 Vec3 Vec3::operator-(const Vec3& other) const { return { m_x - other.m_x, m_y - other.m_y, m_z - other.m_z }; }
 Vec3 Vec3::operator*(const float& other) const { return { m_x * other, m_y * other, m_z * other }; }
@@ -65,6 +72,14 @@ Vec3 Vec3::Cross(const Vec3& v1, const Vec3& v2)
 Vec4::Vec4() : m_x(0), m_y(0), m_z(0), m_w(0) {}
 Vec4::Vec4(float x, float y, float z, float w) : m_x(x), m_y(y), m_z(z), m_w(w) {}
 
+Vec4::Vec4(const float datas[4]) {
+    elements[0] = datas[0];
+    elements[1] = datas[1];
+    elements[2] = datas[2];
+    elements[3] = datas[3];
+    
+
+}
 Vec4 Vec4::operator+(const Vec4& other) const { return { m_x + other.m_x, m_y + other.m_y, m_z + other.m_z, m_w + other.m_w }; }
 Vec4 Vec4::operator-(const Vec4& other) const { return { m_x - other.m_x, m_y - other.m_y, m_z - other.m_z, m_w - other.m_w }; }
 

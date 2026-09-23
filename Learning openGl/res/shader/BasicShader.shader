@@ -40,5 +40,5 @@ void main()
     // Tránh chia cho 0 bằng cách kiểm tra điều kiện an toàn
     vec3 finalRGB = (brightness > 0.001f) ? texColor.rgb * (quantizedBrightness / brightness) : vec3(0.0f);
 
-    color = vec4(finalRGB, texColor.a) ;
+    color = vec4(finalRGB, texColor.a) *uColor ;
 }

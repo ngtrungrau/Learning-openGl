@@ -1,4 +1,6 @@
-﻿#include <GL/glew.h>
+﻿
+
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "VertexBuffer.h"
@@ -12,7 +14,9 @@
 #include <chrono>
 #include <thread>
 #include <windows.h>
-
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 float step = 5.0f; // Khoảng cách di chuyển camera
 
 // Dùng Vec3 để lưu vị trí Camera riêng biệt
@@ -89,6 +93,20 @@ int main()
 
     std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
 
+    ///////////////////////////////////////////////////////////////////////
+    // IMGUI SETUPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP!!!!!!!!!!!!!!!!!!!!!!!
+    // ==========================================
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsClassic();
+
+    const char* glsl_version = "#version 330"; // Hoặc #version 130 tùy bản OpenGL
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+    // ==========================================
+    ///////////////////////////////////////////////////////////////////////////////
+
     // Đưa tọa độ 2 khối về TÂM GỐC TỌA ĐỘ (0,0) để khi xoay không bị lệch vòng cung
     // Chiều rộng = 400, Chiều cao = 400
     Vertex vertices[8] = {
@@ -154,11 +172,28 @@ int main()
     Vec3 cube1_Pos = { 400.0f, 540.0f, 0.0f };  // Khối bên trái
     Vec3 cube2_Pos = { 1520.0f, 540.0f, 0.0f }; // Khối bên phải
 
+    
+    
+    
     while (!glfwWindowShouldClose(window))
     {
-        renderer.Clear();
-        HandleInput();
+       
+        //////////////////////////////////////////////////////////////
+        // ==========================================
+        // IMGUI SETUPPPPPPPPPPPPPPP!!!!!!
+        glfwPollEvents(); 
+        // Thông báo cho ImGui tính toán delta time, input bàn phím/chuột của frame này
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        // ==========================================
+        //////////////////////////////////////////////////////////////// 
 
+        renderer.Clear();
+        //////////////////////////////////////////////////////////////// 
+        // ==========================================
+        // LOGICCCCCCCCCCCCCCCCCCCc
+        HandleInput();
         // Ma trận View (Invert vị trí camera)
         Mat4 ViewMatrix;
         ViewMatrix.Identity();
@@ -179,11 +214,79 @@ int main()
         cube_2_shader.Bind();
         cube_2_shader.SetUniform4Mat("u_MVP", MVP2);
         renderer.Draw(vao, cube_2_shader, 6, (const void*)(6 * sizeof(unsigned int)));
+        // ==========================================
+        ////////////////////////////////////////////////////////////////////////////
+        // ==========================================
+        // IMGUI LOGICCCCCCCCCCCCCCC
+        
+        static int health = 100;
+        static Vec3 clothes_color({ 1,1,1 });
+        static char buffer[100];
+        static bool is_alive;
+        
+        
+        ImGui::ShowDemoWindow();
+        {
+            ImGui::Begin("Player Inspector");
+           
+            ImGui::InputText("Name", buffer, IM_ARRAYSIZE(buffer));
+            ImGui::Checkbox("is_alive", &is_alive);
 
+            if (ImGui::CollapsingHeader("Stats"))
+            {
+
+                ImGui::SliderInt("Health", &health, 0, 100);
+                ImGui::ColorEdit3("clothes_color", clothes_color.elements);
+            }
+            if (ImGui::CollapsingHeader("Action"))
+            {
+                if (ImGui::Button("take_damge") && health>0)
+                {
+                    health -= 10;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Heal") && health<100)
+                {
+                    health += 10;
+                }
+            }
+            ImGui::End();
+        }
+        
+        if (ImGui::BeginMainMenuBar())
+        {
+             if (ImGui::BeginMenu("File"))
+             {
+                // Các lựa chọn bên trong mới dùng MenuItem
+                 static bool check = true;;
+                if (ImGui::MenuItem("New","shortkey",&check)) { /* Code */ }
+                if (ImGui::MenuItem("Exit")) { glfwSetWindowShouldClose(window, true); }
+
+                ImGui::EndMenu(); // Bắt buộc phải có EndMenu()!
+             }
+             if (ImGui::BeginMenu("test"))
+             {
+                 // Các lựa chọn bên trong mới dùng MenuItem
+                 if (ImGui::MenuItem("New", "shortkey")) { /* Code */ }
+                 if (ImGui::MenuItem("Exit")) { glfwSetWindowShouldClose(window, true); }
+
+                 ImGui::EndMenu(); // Bắt buộc phải có EndMenu()!
+             }
+             ImGui::EndMainMenuBar();
+         }    
+   
+            
+        
+        ImGui::Render();
+
+        // Thực sự vẽ ImGui đè lên trên Scene OpenGL vừa vẽ ở Bước 2
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // ==========================================
+        /////////////////////////////////////////////////////////////////////////////
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
+    
     glfwTerminate();
     return 0;
 }
