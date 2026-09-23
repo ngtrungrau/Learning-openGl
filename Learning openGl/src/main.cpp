@@ -1,6 +1,4 @@
-﻿
-
-#include <GL/glew.h>
+﻿#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "VertexBuffer.h"
@@ -177,7 +175,13 @@ int main()
     
     while (!glfwWindowShouldClose(window))
     {
-       
+        static int health = 100;
+        static Vec3 clothes_color({ 1,1,1 });
+        static char buffer[100];
+        static bool is_alive;
+        static bool is_show_demo_window = false;
+        static bool is_show_console = true;
+        static Vec4 color_clear({ 0,0,0,0 });
         //////////////////////////////////////////////////////////////
         // ==========================================
         // IMGUI SETUPPPPPPPPPPPPPPP!!!!!!
@@ -188,7 +192,7 @@ int main()
         ImGui::NewFrame();
         // ==========================================
         //////////////////////////////////////////////////////////////// 
-
+        glClearColor(color_clear.r, color_clear.g, color_clear.b, color_clear.a);
         renderer.Clear();
         //////////////////////////////////////////////////////////////// 
         // ==========================================
@@ -219,13 +223,11 @@ int main()
         // ==========================================
         // IMGUI LOGICCCCCCCCCCCCCCC
         
-        static int health = 100;
-        static Vec3 clothes_color({ 1,1,1 });
-        static char buffer[100];
-        static bool is_alive;
-        
-        
-        ImGui::ShowDemoWindow();
+       
+       
+
+        if (is_show_demo_window)ImGui::ShowDemoWindow();
+
         {
             ImGui::Begin("Player Inspector");
            
@@ -257,26 +259,28 @@ int main()
         {
              if (ImGui::BeginMenu("File"))
              {
-                // Các lựa chọn bên trong mới dùng MenuItem
-                 static bool check = true;;
-                if (ImGui::MenuItem("New","shortkey",&check)) { /* Code */ }
                 if (ImGui::MenuItem("Exit")) { glfwSetWindowShouldClose(window, true); }
-
-                ImGui::EndMenu(); // Bắt buộc phải có EndMenu()!
+                ImGui::EndMenu(); 
              }
-             if (ImGui::BeginMenu("test"))
+             if (ImGui::BeginMenu("Windows"))
              {
-                 // Các lựa chọn bên trong mới dùng MenuItem
-                 if (ImGui::MenuItem("New", "shortkey")) { /* Code */ }
-                 if (ImGui::MenuItem("Exit")) { glfwSetWindowShouldClose(window, true); }
+                 ImGui::MenuItem("Show Demo Window", NULL, &is_show_demo_window);
+                 ImGui::MenuItem("Show Console", NULL, &is_show_console);
+                 ImGui::EndMenu();
+             }
+             if (ImGui::BeginMenu("Colors"))
+             {
+                 ImGui::ColorEdit4("color_clear", color_clear.elements);
+                 ImGui::EndMenu();
 
-                 ImGui::EndMenu(); // Bắt buộc phải có EndMenu()!
              }
              ImGui::EndMainMenuBar();
          }    
    
             
         
+
+       
         ImGui::Render();
 
         // Thực sự vẽ ImGui đè lên trên Scene OpenGL vừa vẽ ở Bước 2
