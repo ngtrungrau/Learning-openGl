@@ -15,7 +15,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-float step = 5.0f; // Khoảng cách di chuyển camera
+float step = 0.1f; // Khoảng cách di chuyển camera
 
 // Dùng Vec3 để lưu vị trí Camera riêng biệt
 Vec3 cameraPos = { 0.0f, 0.0f, 0.0f };
@@ -28,45 +28,115 @@ void HandleInput()
     if (GetAsyncKeyState('A') & 0x8000) cameraPos.m_x -= step; // Camera sang trái
     if (GetAsyncKeyState('D') & 0x8000) cameraPos.m_x += step; // Camera sang phải
 }
+int tmp[1000][1000];
 
-static float currentAngleX = 0.0f;
-
-// Hàm xoay vật thể TẠI TÂM (Local Rotation)
-Mat4 GetModelMatrix(Vec3 centerPosition)
+void CreatCells(int Cells, std::vector<Vertex>& vertexs, std::vector<unsigned int>& indices)
 {
-    currentAngleX += 0.02f;
-    if (currentAngleX >= 6.2831853f) {
-        currentAngleX -= 6.2831853f;
+    if (Cells <= 0 || Cells >= 999) return;
+    vertexs.clear();
+    indices.clear();
+    vertexs.reserve((Cells + 1) * (Cells + 1));
+    indices.reserve(Cells * Cells * 6);
+
+    float width = 1920.0f / Cells;
+    float height = 1080.0f / Cells;
+
+    // Sửa 1: Lặp theo số nguyên (int) để tránh sai số float
+    for (int i = 0; i <= Cells; i++)
+    {
+        float y = i * height;
+        for (int j = 0; j <= Cells; j++)
+        {
+            float x = j * width;
+            Vertex vertex = { {x, y, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 0.0f} };
+            vertexs.emplace_back(vertex);
+        }
     }
 
-    float c = cosf(currentAngleX);
-    float s = sinf(currentAngleX);
+    // Sửa 2: Lưu chỉ số cho đủ (Cells + 1) x (Cells + 1) đỉnh
+    unsigned int Count = 0;
+    for (int i = 0; i <= Cells; i++)
+    {
+        for (int j = 0; j <= Cells; j++)
+        {
+            tmp[i][j] = Count++;
+        }
+    }
 
-    // 1. Tạo ma trận xoay quanh trục X
-    Mat4 rotX;
-    rotX.Identity();
-    rotX.Right = Vec4{ 1.0f, 0.0f, 0.0f, 0.0f };
-    rotX.Up = Vec4{ 0.0f,    c,    s, 0.0f };
-    rotX.Forward = Vec4{ 0.0f,   -s,    c, 0.0f };
-    rotX.Position = Vec4{ 0.0f, 0.0f, 0.0f, 1.0f };
+    // Sửa 3: Duyệt đủ từ 0 đến Cells - 1 ô
+    for (int i = 0; i < Cells; i++)
+    {
+        for (int j = 0; j < Cells; j++)
+        {
+            indices.emplace_back(tmp[i][j]);
+            indices.emplace_back(tmp[i + 1][j]);
+            indices.emplace_back(tmp[i + 1][j + 1]);
 
-    // 2. Dịch chuyển vật thể từ gốc (0,0) tới vị trí thực tế
-    Mat4 trans;
-    trans.Identity();
-    trans.Position = Vec4{ centerPosition.m_x, centerPosition.m_y, centerPosition.m_z, 1.0f };
-
-    // Thứ tự: Xoay tại chỗ trước -> Rồi mới dịch chuyển ra vị trí
-    // (Lưu ý: Tùy lớp Maths của bạn, nếu nhân cột thì Model = Trans * Rot)
-    Mat4 model;
-    model.Identity();
-    model.Right = rotX.Right;
-    model.Up = rotX.Up;
-    model.Forward = rotX.Forward;
-    model.Position = Vec4{ centerPosition.m_x, centerPosition.m_y, centerPosition.m_z, 1.0f };
-
-    return model;
+            indices.emplace_back(tmp[i][j]);
+            indices.emplace_back(tmp[i + 1][j + 1]);
+            indices.emplace_back(tmp[i][j + 1]);
+        }
+    }
 }
 
+// Sửa 4: Phân chia ô Đen/Trắng chuẩn caro theo tọa độ (row, col)
+std::vector<unsigned int> GetBlackGrid(std::vector<unsigned int>& indices)
+{
+    std::vector<unsigned int> BlackIndices;
+    BlackIndices.reserve(indices.size() / 2);
+
+    int totalCells = indices.size() / 6;
+    int cellsPerRow = static_cast<int>(std::sqrt(totalCells));
+
+    for (int cellIdx = 0; cellIdx < totalCells; cellIdx++)
+    {
+        int row = cellIdx / cellsPerRow;
+        int col = cellIdx % cellsPerRow;
+
+        if ((row + col) % 2 == 0) // Ô đen
+        {
+            int baseIdx = cellIdx * 6;
+            for (int k = 0; k < 6; k++)
+                BlackIndices.push_back(indices[baseIdx + k]);
+        }
+    }
+    return BlackIndices;
+}
+
+std::vector<unsigned int> GetWhiteGrid(std::vector<unsigned int>& indices)
+{
+    std::vector<unsigned int> WhiteIndices;
+    WhiteIndices.reserve(indices.size() / 2);
+
+    int totalCells = indices.size() / 6;
+    int cellsPerRow = static_cast<int>(std::sqrt(totalCells));
+
+    for (int cellIdx = 0; cellIdx < totalCells; cellIdx++)
+    {
+        int row = cellIdx / cellsPerRow;
+        int col = cellIdx % cellsPerRow;
+
+        if ((row + col) % 2 != 0) // Ô trắng
+        {
+            int baseIdx = cellIdx * 6;
+            for (int k = 0; k < 6; k++)
+                WhiteIndices.push_back(indices[baseIdx + k]);
+        }
+    }
+    return WhiteIndices;
+}
+void UpdateVao(VAO& vao1, VAO& vao2, std::vector<Vertex> vertices, std::vector<unsigned int> indices, VertexBufferLayout& layout, std::vector<unsigned int>&Blackin, std::vector<unsigned int>&Whitein,int cells)
+{
+    CreatCells(cells, vertices, indices);
+    Blackin = GetBlackGrid(indices);
+    Whitein = GetWhiteGrid(indices);
+    VertexBuffer vb(vertices.data(), vertices.size() * sizeof(Vertex));
+    IndexBuffer ib1(Blackin.data(), Blackin.size());
+    IndexBuffer ib2(Whitein.data(), Whitein.size());
+
+    vao1.AddVertexBuffer(vb, ib1, layout);
+    vao2.AddVertexBuffer(vb, ib2, layout);
+}
 int main()
 {
     GLFWwindow* window;
@@ -104,57 +174,29 @@ int main()
     ImGui_ImplOpenGL3_Init(glsl_version);
     // ==========================================
     ///////////////////////////////////////////////////////////////////////////////
-
-    // Đưa tọa độ 2 khối về TÂM GỐC TỌA ĐỘ (0,0) để khi xoay không bị lệch vòng cung
-    // Chiều rộng = 400, Chiều cao = 400
-    Vertex vertices[8] = {
-        // ---------------- KHỐI 1 (Local Space: tâm tại 0,0) ----------------
-        { { -200.0f,  200.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f } },
-        { {  200.0f,  200.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } },
-        { {  200.0f, -200.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f } },
-        { { -200.0f, -200.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f } },
-
-        // ---------------- KHỐI 2 (Local Space: tâm tại 0,0) ----------------
-        { { -200.0f,  200.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f } },
-        { {  200.0f,  200.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f } },
-        { {  200.0f, -200.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f } },
-        { { -200.0f, -200.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f } }
-    };
-
-    unsigned int indices[12] = {
-        0, 1, 2, 2, 3, 0,
-        4, 5, 6, 6, 7, 4
-    };
-
-    VAO vao;
-    VertexBuffer vb(vertices, sizeof(vertices));
-    IndexBuffer ib(indices, 12);
     VertexBufferLayout layout;
 
-    layout.AddLayout<float>(3, GL_FALSE); // Position
+    layout.AddLayout<float>(4, GL_FALSE); // Position
     layout.AddLayout<float>(4, GL_FALSE); // Color
     layout.AddLayout<float>(2, GL_FALSE); // UV
-    vao.AddVertexBuffer(vb, ib, layout);
+    
+    VAO vao1;
+    VAO vao2;
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    std::vector<unsigned int> Blackin = GetBlackGrid(indices);
+    std::vector<unsigned int> Whitein = GetWhiteGrid(indices);
 
     float levels = 4.0f;
 
-    Shader cube_1_shader("res/Shader/BasicShader.shader");
-    Shader cube_2_shader("res/Shader/BasicShader.shader");
-    Texture texture1("res/image/dog.png");
-    Texture texture2("res/image/cat.png");
+    Shader basic_shader("res/Shader/BasicShader.shader");
+   
 
-    texture1.Bind(0);
-    texture2.Bind(1);
+    basic_shader.Bind();
 
-    cube_1_shader.Bind();
-    cube_1_shader.SetUniform1i("uTexture", 0);
-    cube_1_shader.SetUniform1f("levels", levels);
-    cube_1_shader.UnBind();
-
-    cube_2_shader.Bind();
-    cube_2_shader.SetUniform1i("uTexture", 1);
-    cube_2_shader.SetUniform1f("levels", levels); // Đã sửa lỗi gán nhầm
-    cube_2_shader.UnBind();
+    basic_shader.SetUniform1f("levels", levels); // Đã sửa lỗi gán nhầm
+    basic_shader.UnBind();
 
     Renderer renderer;
     renderer.EnableBlend();
@@ -165,23 +207,23 @@ int main()
     // Mở rộng Near/Far lên [-2000.0, 2000.0] để khi xoay 3D trục Z không bị clip
     Mat4 ortho;
     ortho.Ortho(0.0f, 1920.0f, 0.0f, 1080.0f, -2000.0f, 2000.0f);
-
-    // Vị trí tâm của 2 khối trong World Space
-    Vec3 cube1_Pos = { 400.0f, 540.0f, 0.0f };  // Khối bên trái
-    Vec3 cube2_Pos = { 1520.0f, 540.0f, 0.0f }; // Khối bên phải
-
-    
-    
-    
+    Mat4 Model;
+    Model.Identity();
+    Mat4 Camera;
+    Camera.Identity();
+    int last_cells = 0;
     while (!glfwWindowShouldClose(window))
     {
-        static int health = 100;
-        static Vec3 clothes_color({ 1,1,1 });
-        static char buffer[100];
-        static bool is_alive;
         static bool is_show_demo_window = false;
         static bool is_show_console = true;
         static Vec4 color_clear({ 0,0,0,0 });
+        static Vec4 color_grid_black({ 0,0,0,1 });
+        static Vec4 color_grid_white({ 1,1,1,1 });
+        static Vec4 CoX = { 1,0,0,0 };
+        static Vec4 CoY = { 0,1,0,0 };
+        static Vec4 CoZ = { 0,0,1,0 };
+        static Vec4 CoW = { 0,0,0,1 };
+        static int cells=10;
         //////////////////////////////////////////////////////////////
         // ==========================================
         // IMGUI SETUPPPPPPPPPPPPPPP!!!!!!
@@ -196,28 +238,26 @@ int main()
         renderer.Clear();
         //////////////////////////////////////////////////////////////// 
         // ==========================================
-        // LOGICCCCCCCCCCCCCCCCCCCc
+        // LOGICCCCCCCCCCCCCCCCCCC
+        if (cells != last_cells)
+        {
+            UpdateVao(vao1, vao2, vertices, indices, layout, Blackin, Whitein, cells);
+            last_cells = cells;
+        }
+       
+
+
+
         HandleInput();
-        // Ma trận View (Invert vị trí camera)
-        Mat4 ViewMatrix;
-        ViewMatrix.Identity();
-        ViewMatrix.Position = Vec4{ -cameraPos.m_x, -cameraPos.m_y, -cameraPos.m_z, 1.0f };
+        Camera.Translate(cameraPos);
+        basic_shader.Bind();
+        Mat4 MVP = ortho * Camera * Model;
+        basic_shader.SetUniform4Mat("u_MVP", MVP);
+        basic_shader.SetUniform4f("uColor",color_grid_black);
+        renderer.Draw(vao1, basic_shader, Blackin.size(),(const void*)0);
+        basic_shader.SetUniform4f("uColor", color_grid_white);
+        renderer.Draw(vao2, basic_shader, Whitein.size(), (const void*)0);
 
-        // Lấy ma trận Model đã xoay tại vị trí đặt vật thể
-        Mat4 Model1 = GetModelMatrix(cube1_Pos);
-        Mat4 Model2 = GetModelMatrix(cube2_Pos);
-
-        // Tính MVP cho Khối 1
-        Mat4 MVP1 = ortho * ViewMatrix * Model1;
-        cube_1_shader.Bind();
-        cube_1_shader.SetUniform4Mat("u_MVP", MVP1);
-        renderer.Draw(vao, cube_1_shader, 6, (const void*)0);
-
-        // Tính MVP cho Khối 2
-        Mat4 MVP2 = ortho * ViewMatrix * Model2;
-        cube_2_shader.Bind();
-        cube_2_shader.SetUniform4Mat("u_MVP", MVP2);
-        renderer.Draw(vao, cube_2_shader, 6, (const void*)(6 * sizeof(unsigned int)));
         // ==========================================
         ////////////////////////////////////////////////////////////////////////////
         // ==========================================
@@ -229,29 +269,23 @@ int main()
         if (is_show_demo_window)ImGui::ShowDemoWindow();
 
         {
-            ImGui::Begin("Player Inspector");
+            ImGui::Begin("Test2D");
            
-            ImGui::InputText("Name", buffer, IM_ARRAYSIZE(buffer));
-            ImGui::Checkbox("is_alive", &is_alive);
+            ImGui::SliderInt("Cells", &cells, 1, 1000);
+            ImGui::ColorEdit4("color_grid_black", color_grid_black.elements);
+            ImGui::ColorEdit4("color_grid_white", color_grid_white.elements);
+           
+            
+            ImGui::DragFloat4("x", CoX.elements, 0.0001f);
+            ImGui::DragFloat4("y", CoY.elements, 0.0001f);
+            ImGui::DragFloat4("z", CoZ.elements, 0.0001f);
+            ImGui::DragFloat4("w", CoW.elements, 0.0001f);
+            Model.Columns[0] = { CoX.m_x,CoY.m_x,CoZ.m_x,CoW.m_x };
+            Model.Columns[1] = { CoX.m_y,CoY.m_y,CoZ.m_y,CoW.m_y };
+            Model.Columns[2] = { CoX.m_z,CoY.m_z,CoZ.m_z,CoW.m_z };
+            Model.Columns[3] = { CoX.m_w,CoY.m_w,CoZ.m_w,CoW.m_w };
+           
 
-            if (ImGui::CollapsingHeader("Stats"))
-            {
-
-                ImGui::SliderInt("Health", &health, 0, 100);
-                ImGui::ColorEdit3("clothes_color", clothes_color.elements);
-            }
-            if (ImGui::CollapsingHeader("Action"))
-            {
-                if (ImGui::Button("take_damge") && health>0)
-                {
-                    health -= 10;
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Heal") && health<100)
-                {
-                    health += 10;
-                }
-            }
             ImGui::End();
         }
         

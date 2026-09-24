@@ -3,7 +3,7 @@ struct Vertex
 {
     struct
     {
-        float x, y, z;
+        float x, y, z,w;
     };
     struct
     {
