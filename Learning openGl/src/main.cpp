@@ -40,7 +40,7 @@ void CreatCells(int Cells, std::vector<Vertex>& vertexs, std::vector<unsigned in
 
     float width = 1920.0f / Cells;
     float height = 1080.0f / Cells;
-
+    //
     // Sửa 1: Lặp theo số nguyên (int) để tránh sai số float
     for (int i = 0; i <= Cells; i++)
     {
