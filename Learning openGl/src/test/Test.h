@@ -10,4 +10,4 @@ namespace test
 		virtual void OnRender()=0;
 		virtual void OnImGuiRender() = 0;
 	};
-}//
+}

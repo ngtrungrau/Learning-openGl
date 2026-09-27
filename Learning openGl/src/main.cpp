@@ -15,6 +15,8 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include"TestClearColor.h"
+#include"TestMenu.h"
 float step = 0.1f; // Khoảng cách di chuyển camera
 
 // Dùng Vec3 để lưu vị trí Camera riêng biệt
@@ -212,6 +214,15 @@ int main()
     Mat4 Camera;
     Camera.Identity();
     int last_cells = 0;
+    /////////////
+
+    test::Test* current_test = nullptr;
+    test::TestMenu* test_menu = new test::TestMenu(current_test);
+    current_test = test_menu;
+    test_menu->SetCurrentTest(current_test);
+
+    test_menu->RegisterTest<test::TestClearColor>("Test_clear_color");
+
     while (!glfwWindowShouldClose(window))
     {
         static bool is_show_demo_window = false;
@@ -234,7 +245,9 @@ int main()
         ImGui::NewFrame();
         // ==========================================
         //////////////////////////////////////////////////////////////// 
-        glClearColor(color_clear.r, color_clear.g, color_clear.b, color_clear.a);
+        //glClearColor(color_clear.r, color_clear.g, color_clear.b, color_clear.a);
+        test_menu->OnUpdate(0.0f);
+        test_menu->OnRender();
         renderer.Clear();
         //////////////////////////////////////////////////////////////// 
         // ==========================================
@@ -263,8 +276,30 @@ int main()
         // ==========================================
         // IMGUI LOGICCCCCCCCCCCCCCC
         
+        {
+            ImGui::Begin("Test");
+            test_menu->OnImGuiRender();
+           
+            if (test_menu->GetCurrentTest()!= test_menu)
+            { 
+                test_menu->GetCurrentTest()->OnImGuiRender();
+                ImGui::SameLine();
+                if (ImGui::Button("<-"))
+                {
+                    test_menu->DeleteCurrentTest();
+                    test_menu->SetCurrentTest(test_menu);
+                }
+                
+               
+            }
+            
+            
+
+            ImGui::End();
+        }
        
        
+      
 
         if (is_show_demo_window)ImGui::ShowDemoWindow();
 
