@@ -12,7 +12,7 @@ namespace test
 		Test* m_CurrentTest;
 		std::vector<std::pair<std::string, std::function<Test* ()>>> m_Tests;
 	public:
-		TestMenu(Test*& CurrentTest);
+		TestMenu();
 		~TestMenu();
 		template<typename T>
 		void RegisterTest(const std::string& name);

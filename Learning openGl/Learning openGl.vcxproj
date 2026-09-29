@@ -146,6 +146,7 @@
     <ClCompile Include="res\imgui\imgui_widgets.cpp" />
     <ClCompile Include="res\stb_image\stb_image.cpp" />
     <ClCompile Include="src\Maths.cpp" />
+    <ClCompile Include="src\test\Test2DTexture.cpp" />
     <ClCompile Include="src\test\TestClearColor.cpp" />
     <ClCompile Include="src\test\TestMenu.cpp" />
     <ClCompile Include="src\Texture.cpp" />
@@ -179,6 +180,7 @@
     <ClInclude Include="res\stb_image\stb_image.h" />
     <ClInclude Include="src\Maths.h" />
     <ClInclude Include="src\test\Test.h" />
+    <ClInclude Include="src\test\Test2DTexture.h" />
     <ClInclude Include="src\test\TestClearColor.h" />
     <ClInclude Include="src\test\TestMenu.h" />
     <ClInclude Include="src\Texture.h" />

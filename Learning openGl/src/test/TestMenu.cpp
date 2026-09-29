@@ -1,11 +1,15 @@
 #include "TestMenu.h"
 #include "imgui.h"
 
-test::TestMenu::TestMenu(Test*& CurrentTest):m_CurrentTest(CurrentTest) {};
+test::TestMenu::TestMenu() {
+	m_CurrentTest = this;
+}
 
 
 test::TestMenu::~TestMenu()
 {
+	delete m_CurrentTest;
+	m_CurrentTest = nullptr;
 }
 
 void test::TestMenu::OnUpdate(float delta_Time)
